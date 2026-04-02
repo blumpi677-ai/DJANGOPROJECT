@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}JobFlow - Find Your Dream Career{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Hero Section -->
+  <section class="hero fade-in">
+    <div class="hero-content">
+      <h1>
+        Find Your <span>Dream Job</span><br>
+        Build Your Future
+      </h1>
+      <p>
+        Connect with thousands of top employers. Whether you're looking for your first job 
+        or your next big opportunity, JobFlow helps you find the perfect match.
+      </p>
+      <div class="hero-buttons">
+        <a href="{% url 'jobs' %}" class="btn btn-primary btn-lg">
+          🔍 Browse Jobs
+        </a>
+        <a href="{% url 'register' %}" class="btn btn-outline btn-lg">
+          ✨ Get Started Free
+        </a>
+      </div>
+    </div>
+    
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value" id="jobCount">10,000+</div>
+        <div class="hero-stat-label">Active Jobs</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">5,000+</div>
+        <div class="hero-stat-label">Companies</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">50,000+</div>
+        <div class="hero-stat-label">Job Seekers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">95%</div>
+        <div class="hero-stat-label">Success Rate</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features slide-up">
+    <div class="section-header">
+      <h2>Why Choose JobFlow?</h2>
+      <p>We make job hunting simple, efficient, and successful</p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Smart Job Matching</h3>
+        <p>Our intelligent algorithm matches you with jobs that fit your skills, experience, and career goals perfectly.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Quick Apply</h3>
+        <p>Apply to multiple jobs with just one click. Upload your resume once and use it everywhere.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Track Applications</h3>
+        <p>Monitor all your applications in one place. Get real-time updates on your application status.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>Top Companies</h3>
+        <p>Connect with industry-leading companies and startups looking for talent just like you.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Salary Insights</h3>
+        <p>Get detailed salary information and negotiate better with our comprehensive market data.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure & Private</h3>
+        <p>Your data is protected with enterprise-grade security. Control who sees your profile.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="card mt-4 text-center" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none;">
+    <h2 style="color: white; margin-bottom: 1rem;">Ready to Start Your Journey?</h2>
+    <p style="color: rgba(255,255,255,0.9); margin-bottom: 2rem; font-size: 1.1rem;">
+      Join thousands of professionals who found their dream careers through JobFlow
+    </p>
+    <div class="hero-buttons">
+      <a href="{% url 'register' %}" class="btn" style="background: white; color: var(--primary);">
+        🚀 Create Free Account
+      </a>
+      <a href="{% url 'jobs' %}" class="btn" style="background: transparent; border: 2px solid white; color: white;">
+        👀 Explore Jobs
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

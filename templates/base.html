@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}JobFlow - Find Your Dream Career{% endblock %}</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="{% load static %}{% static 'css/style.css' %}">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-brand">
+      <a href="{% url 'home' %}" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+        <div class="logo-icon">💼</div>
+        <h2>JobFlow</h2>
+      </a>
+    </div>
+    
+    <div class="nav-links" id="navLinks">
+      <a href="{% url 'home' %}" class="{% block nav_home %}{% endblock %}">
+        <span>🏠</span> Home
+      </a>
+      <a href="{% url 'jobs' %}" class="{% block nav_jobs %}{% endblock %}">
+        <span>💼</span> Browse Jobs
+      </a>
+      <a href="{% url 'post_job' %}" class="{% block nav_post %}{% endblock %}">
+        <span>➕</span> Post Job
+      </a>
+      <a href="{% url 'dashboard' %}" class="{% block nav_dashboard %}{% endblock %}">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="{% url 'login' %}" class="btn-nav-outline" id="loginBtn">Login</a>
+      <a href="{% url 'register' %}" class="btn-nav" id="registerBtn">Sign Up</a>
+    </div>
+    
+    <div class="mobile-menu-btn" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>💼 JobFlow</h3>
+        <p>Your gateway to amazing career opportunities. Connect with top employers and find your dream job today.</p>
+      </div>
+      <div class="footer-links">
+        <h4>For Job Seekers</h4>
+        <ul>
+          <li><a href="{% url 'jobs' %}">Browse Jobs</a></li>
+          <li><a href="{% url 'register' %}">Create Account</a></li>
+          <li><a href="{% url 'dashboard' %}">My Applications</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>For Employers</h4>
+        <ul>
+          <li><a href="{% url 'post_job' %}">Post a Job</a></li>
+          <li><a href="{% url 'register' %}">Employer Sign Up</a></li>
+          <li><a href="{% url 'dashboard' %}">Manage Jobs</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 JobFlow. All rights reserved. Made with ❤️ for job seekers everywhere.</p>
+    </div>
+  </footer>
+
+  <!-- Global Scripts -->
+  <script>
+    // API Endpoints (matching your Django URLs)
+    const API = {
+      auth: {
+        login: '/api/auth/login/',
+        register: '/api/auth/register/',
+        logout: '/api/auth/logout/'
+      },
+      jobs: '/api/jobs/',
+      applications: '/api/applications/'
+    };
+
+    // Page URLs
+    const PAGES = {
+      home: '{% url "home" %}',
+      login: '{% url "login" %}',
+      register: '{% url "register" %}',
+      jobs: '{% url "jobs" %}',
+      dashboard: '{% url "dashboard" %}',
+      postJob: '{% url "post_job" %}'
+    };
+
+    // Mobile menu toggle
+    function toggleMenu() {
+      document.getElementById('navLinks').classList.toggle('active');
+    }
+    
+    // Toast notifications
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <span>${type === 'success' ? '✅' : '❌'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Check authentication state
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      const loginBtn = document.getElementById('loginBtn');
+      const registerBtn = document.getElementById('registerBtn');
+      
+      if (token) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (registerBtn) {
+          registerBtn.textContent = 'Logout';
+          registerBtn.href = '#';
+          registerBtn.onclick = (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            showToast('Logged out successfully');
+            setTimeout(() => {
+              window.location.href = PAGES.login;
+            }, 1000);
+          };
+        }
+      }
+    }
+    
+    checkAuth();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

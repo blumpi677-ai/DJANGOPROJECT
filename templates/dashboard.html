@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - JobFlow{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header fade-in">
+    <h1>👋 Welcome back!</h1>
+    <p>Manage your applications and track your job search progress</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid fade-in">
+    <div class="stat-card">
+      <div class="stat-card-icon primary">📝</div>
+      <div class="stat-card-value" id="totalApplications">-</div>
+      <div class="stat-card-label">Total Applications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon warning">⏳</div>
+      <div class="stat-card-value" id="pendingCount">-</div>
+      <div class="stat-card-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon secondary">👁️</div>
+      <div class="stat-card-value" id="reviewingCount">-</div>
+      <div class="stat-card-label">Under Review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon success">✅</div>
+      <div class="stat-card-value" id="acceptedCount">-</div>
+      <div class="stat-card-label">Accepted</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs fade-in">
+    <div class="tab active" data-tab="applications" onclick="switchTab('applications', this)">
+      📋 My Applications
+    </div>
+    <div class="tab" data-tab="saved" onclick="switchTab('saved', this)">
+      ❤️ Saved Jobs
+    </div>
+    <div class="tab" data-tab="profile" onclick="switchTab('profile', this)">
+      👤 Profile
+    </div>
+  </div>
+
+  <!-- Applications Tab -->
+  <div id="applicationsTab" class="tab-content fade-in">
+    <!-- Loading State -->
+    <div class="loading" id="loadingState">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Applications List -->
+    <div id="applications"></div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state-icon">📭</div>
+      <h3>No Applications Yet</h3>
+      <p>Start applying to jobs and track your progress here</p>
+      <a href="{% url 'jobs' %}" class="btn btn-primary mt-2">🔍 Browse Jobs</a>
+    </div>
+  </div>
+
+  <!-- Saved Jobs Tab -->
+  <div id="savedTab" class="tab-content" style="display: none;">
+    <div class="empty-state">
+      <div class="empty-state-icon">❤️</div>
+      <h3>No Saved Jobs</h3>
+      <p>Save jobs you're interested in to apply later</p>
+      <a href="{% url 'jobs' %}" class="btn btn-primary mt-2">🔍 Browse Jobs</a>
+    </div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div id="profileTab" class="tab-content" style="display: none;">
+    <div class="card">
+      <h3 style="margin-bottom: 1.5rem;">👤 Profile Settings</h3>
+      <form id="profileForm">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" placeholder="+91 XXXXX XXXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea class="form-textarea" placeholder="Tell employers about yourself..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resume</label>
+          <div class="form-file">
+            <input type="file" accept=".pdf,.doc,.docx">
+            <div class="form-file-icon">📎</div>
+            <div class="form-file-text">
+              <span>Click to upload</span> your resume<br>
+              <small style="color: var(--gray-400);">PDF, DOC up to 5MB</small>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let applicationsData = [];
+
+function switchTab(tab, element) {
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  element.classList.add('active');
+  
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById(tab + 'Tab').style.display = 'block';
+}
+
+async function loadDashboard() {
+  const token = localStorage.getItem("token");
+  
+  if (!token) {
+    window.location.href = "{% url 'login' %}";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/applications/", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "{% url 'login' %}";
+      return;
+    }
+
+    const data = await res.json();
+    applicationsData = data;
+
+    document.getElementById("loadingState").style.display = "none";
+
+    // Update stats
+    document.getElementById("totalApplications").textContent = data.length;
+    document.getElementById("pendingCount").textContent = data.filter(a => a.status === 'pending').length;
+    document.getElementById("reviewingCount").textContent = data.filter(a => a.status === 'reviewing').length;
+    document.getElementById("acceptedCount").textContent = data.filter(a => a.status === 'accepted' || a.status === 'approved').length;
+
+    if (data.length === 0) {
+      document.getElementById("emptyState").style.display = "block";
+      return;
+    }
+
+    renderApplications(data);
+  } catch (err) {
+    document.getElementById("loadingState").style.display = "none";
+    showToast("Failed to load dashboard", "error");
+  }
+}
+
+function renderApplications(applications) {
+  const statusConfig = {
+    pending: { icon: '⏳', class: 'status-pending', label: 'Pending' },
+    reviewing: { icon: '👁️', class: 'status-reviewing', label: 'Under Review' },
+    accepted: { icon: '✅', class: 'status-accepted', label: 'Accepted' },
+    approved: { icon: '✅', class: 'status-approved', label: 'Approved' },
+    rejected: { icon: '❌', class: 'status-rejected', label: 'Rejected' }
+  };
+
+  document.getElementById("applications").innerHTML = applications.map((a, index) => {
+    const status = statusConfig[a.status] || statusConfig.pending;
+    return `
+      <div class="application-card fade-in" style="animation-delay: ${index * 0.05}s;">
+        <div class="application-icon">💼</div>
+        <div class="application-content">
+          <div class="application-title">Job #${a.job} ${a.job_title ? '- ' + a.job_title : ''}</div>
+          <div class="application-meta">
+            Applied on ${a.applied_date ? new Date(a.applied_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recently'}
+          </div>
+        </div>
+        <span class="status-badge ${status.class}">
+          ${status.icon} ${status.label}
+        </span>
+      </div>
+    `;
+  }).join("");
+}
+
+document.getElementById("profileForm").onsubmit = (e) => {
+  e.preventDefault();
+  showToast("Profile updated successfully!");
+};
+
+// Load dashboard on page load
+loadDashboard();
+</script>
+{% endblock %}

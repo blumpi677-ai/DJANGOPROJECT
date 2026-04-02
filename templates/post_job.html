@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Post a Job - JobFlow{% endblock %}
+{% block nav_post %}active{% endblock %}
+
+{% block content %}
+<div class="container container-md">
+  <div class="page-header fade-in text-center">
+    <h1>📝 Post a New Job</h1>
+    <p>Find the perfect candidate for your team</p>
+  </div>
+
+  <div class="card fade-in">
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+
+    <form id="jobForm">
+      <div class="form-group">
+        <label class="form-label">Job Title *</label>
+        <input type="text" id="title" class="form-input" placeholder="e.g. Senior Software Engineer" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Location *</label>
+          <input type="text" id="location" class="form-input" placeholder="e.g. Mumbai, Remote" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Salary (₹/year) *</label>
+          <input type="number" id="salary" class="form-input" placeholder="e.g. 1500000" required min="0">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select id="category" class="form-select" required>
+            <option value="">Select a category</option>
+            <option value="technology">💻 Technology</option>
+            <option value="design">🎨 Design</option>
+            <option value="marketing">📢 Marketing</option>
+            <option value="sales">💼 Sales</option>
+            <option value="finance">💰 Finance</option>
+            <option value="healthcare">🏥 Healthcare</option>
+            <option value="education">📚 Education</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Employment Type *</label>
+          <select id="employmentType" class="form-select" required>
+            <option value="full-time">Full-time</option>
+            <option value="part-time">Part-time</option>
+            <option value="contract">Contract</option>
+            <option value="internship">Internship</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Job Description *</label>
+        <textarea id="description" class="form-textarea" placeholder="Describe the role, responsibilities, and what you're looking for in an ideal candidate..." required style="min-height: 180px;"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Requirements</label>
+        <textarea id="requirements" class="form-textarea" placeholder="List the required skills, experience, and qualifications..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Benefits</label>
+        <textarea id="benefits" class="form-textarea" placeholder="e.g. Health insurance, Flexible hours, Remote work, Stock options..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Job Description Document (Optional)</label>
+        <div class="form-file">
+          <input type="file" id="jd_file" accept=".pdf,.doc,.docx">
+          <div class="form-file-icon">📄</div>
+          <div class="form-file-text">
+            <span>Click to upload</span> JD document<br>
+            <small style="color: var(--gray-400);">PDF, DOC up to 10MB</small>
+          </div>
+        </div>
+        <p id="jdFileName" class="form-helper"></p>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <a href="{% url 'jobs' %}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg" style="flex: 2;" id="submitBtn">
+          🚀 Publish Job
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// File input change handler
+document.getElementById("jd_file").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    document.getElementById("jdFileName").textContent = `📄 ${file.name}`;
+  }
+});
+
+document.getElementById("jobForm").onsubmit = async (e) => {
+  e.preventDefault();
+  
+  const token = localStorage.getItem("token");
+  
+  if (!token) {
+    showToast("Please login first", "error");
+    setTimeout(() => window.location.href = "{% url 'login' %}", 1500);
+    return;
+  }
+
+  const submitBtn = document.getElementById("submitBtn");
+  const alertContainer = document.getElementById("alertContainer");
+  
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div> Publishing...';
+  alertContainer.innerHTML = "";
+
+  const formData = new FormData();
+  formData.append("title", document.getElementById("title").value);
+  formData.append("location", document.getElementById("location").value);
+  formData.append("salary", document.getElementById("salary").value);
+  formData.append("category", document.getElementById("category").value);
+  formData.append("employment_type", document.getElementById("employmentType").value);
+  formData.append("description", document.getElementById("description").value);
+  formData.append("requirements", document.getElementById("requirements").value);
+  formData.append("benefits", document.getElementById("benefits").value);
+  
+  const jdFile = document.getElementById("jd_file").files[0];
+  if (jdFile) {
+    formData.append("jd_file", jdFile);
+  }
+
+  try {
+    const res = await fetch("/api/jobs/", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token
+      },
+      body: formData
+    });
+
+    if (res.ok) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-success">
+          ✅ Job posted successfully! Redirecting...
+        </div>
+      `;
+      showToast("Job posted successfully! 🎉");
+      setTimeout(() => window.location.href = "{% url 'jobs' %}", 1500);
+    } else if (res.status === 403) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-error">
+          ❌ Only employers can post jobs. Please register as an employer.
+        </div>
+      `;
+    } else {
+      const err = await res.json();
+      alertContainer.innerHTML = `
+        <div class="alert alert-error">
+          ❌ ${err.detail || 'Failed to post job. Please try again.'}
+        </div>
+      `;
+    }
+  } catch (err) {
+    alertContainer.innerHTML = `
+      <div class="alert alert-error">
+        ❌ Network error. Please check your connection.
+      </div>
+    `;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '🚀 Publish Job';
+  }
+};
+</script>
+{% endblock %}
